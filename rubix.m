@@ -3,8 +3,8 @@ function err = rubix(moves)
 % algorithms for an n-sized rubik's cube.
 %
 % This all depends on an established convention based on a geometrically
-% proper xyz coordinate system
-% 
+% proper xyz coordinate system.
+%
 % The unfolded cube pattern is shown below. These patterns are
 % representative only, and the algorithm has been generalized to accomodate
 % the construction of any n-sized rubik's cube (min = 2:increments of 1:max = your computer memory).
@@ -52,6 +52,19 @@ function err = rubix(moves)
 %     NaN,    NaN,    NaN,    1.5,    1.5,    1.5,    NaN,    NaN,    NaN,    NaN,    NaN,    NaN;...
 %     NaN,    NaN,    NaN,    0.5,    0.5,    0.5,    NaN,    NaN,    NaN,    NaN,    NaN,    NaN;...
 %     ];
+%
+% Move algorithms are based on a combination of the same coordinate system
+% as well as more intuitive references to the rubik's cube.
+% These references include:
+% - horizontal(h) where the top-most row corresponds to index 1 and the index
+%   increases by increments of 1 from top to bottom
+% - vertical(v) where the left-most column corresponds to index 1 and the
+%   index increases by increments of 1 from left to right
+% - depth(d) where the front face correspondes to index 1 and the index
+%   increases by increments of 1 from front to back
+% - clockwise(cw) and counter-clockwise(ccw) where the direction of
+%   rotation always corresponds to a particular axis with the perspective
+%   of looking the positive direction along the given axis
 
 %% rubix colors
 global colors
@@ -66,12 +79,13 @@ colors = {...
 
 %% construct rubik's cube
 
-rubix_size = 3.5; % size of 3 corresponds to 3x3x3 rubix, for now limit to 9x9x9
-r.rubix_size = rubix_size;
+rubix_size = 10; % size of 3 corresponds to 3x3x3 rubix, for now limit to 9x9x9
 
-if mod(rubix_size,1) ~= 0 || rubix_size < 2
+if ~isnumeric(rubix_size) || mod(rubix_size,1) ~= 0 || rubix_size < 2
     return
 end
+
+r.rubix_size = rubix_size;
 
 % construct blocks of data corresponding to each color
 block = struct;
@@ -139,13 +153,15 @@ r.z = [...
 %         end
 %     end
 % end
-% 
+%
 % err(1:find(err==0,1,'first')-1) = [];
 
 % figure;
 % plot(err,'-o')
 % axis tight
-
+r = make_a_move(r,'v3ccw');
+r = make_a_move(r,'h7cw');
+r = make_a_move(r,'d7cw');
 %% display the rubix
 
 figure('Position',[620,200,510,520],'Color','w')
@@ -216,83 +232,127 @@ function r = make_a_move(r,move)
 %   positive direction of the corresponding axis
 cw = -1;
 ccw = 1;
-switch move
-    case 'h1cw'
-        r.unqids(4,:) = r.unqids(4,[10:12,1:9]);
-        r.unqids(1:3,4:6) = rot90(r.unqids(1:3,4:6),ccw);
-    case 'h2cw'
-        r.unqids(5,:) = r.unqids(5,[10:12,1:9]);
-    case 'h3cw'
-        r.unqids(6,:) = r.unqids(6,[10:12,1:9]);
-        r.unqids(7:9,4:6) = rot90(r.unqids(7:9,4:6),cw);
-        
-    case 'h1ccw'
-        r.unqids(4,:) = r.unqids(4,[4:12,1:3]);
-        r.unqids(1:3,4:6) = rot90(r.unqids(1:3,4:6),cw);
-    case 'h2ccw'
-        r.unqids(5,:) = r.unqids(5,[4:12,1:3]);
-    case 'h3ccw'
-        r.unqids(6,:) = r.unqids(6,[4:12,1:3]);
-        r.unqids(7:9,4:6) = rot90(r.unqids(7:9,4:6),ccw);
-        
-    case 'v1cw'
-        col = [flipud(r.unqids(4:6,12));r.unqids(:,4)];
-        col = [col(10:12);col(1:9)];
-        r.unqids(:,4) = col(4:12);
-        r.unqids(4:6,12) = flipud(col(1:3));
-        r.unqids(4:6,1:3) = rot90(r.unqids(4:6,1:3),cw);
-    case 'v2cw'
-        col = [flipud(r.unqids(4:6,11));r.unqids(:,5)];
-        col = [col(10:12);col(1:9)];
-        r.unqids(:,5) = col(4:12);
-        r.unqids(4:6,11) = flipud(col(1:3));
-    case 'v3cw'
-        col = [flipud(r.unqids(4:6,10));r.unqids(:,6)];
-        col = [col(10:12);col(1:9)];
-        r.unqids(:,6) = col(4:12);
-        r.unqids(4:6,10) = flipud(col(1:3));
-        r.unqids(4:6,7:9) = rot90(r.unqids(4:6,7:9),ccw);
-        
-    case 'v1ccw'
-        col = [flipud(r.unqids(4:6,12));r.unqids(:,4)];
-        col = [col(4:12);col(1:3)];
-        r.unqids(:,4) = col(4:12);
-        r.unqids(4:6,12) = flipud(col(1:3));
-        r.unqids(4:6,1:3) = rot90(r.unqids(4:6,1:3),ccw);
-    case 'v2ccw'
-        col = [flipud(r.unqids(4:6,11));r.unqids(:,5)];
-        col = [col(4:12);col(1:3)];
-        r.unqids(:,5) = col(4:12);
-        r.unqids(4:6,11) = flipud(col(1:3));
-    case 'v3ccw'
-        col = [flipud(r.unqids(4:6,10));r.unqids(:,6)];
-        col = [col(4:12);col(1:3)];
-        r.unqids(:,6) = col(4:12);
-        r.unqids(4:6,10) = flipud(col(1:3));
-        r.unqids(4:6,7:9) = rot90(r.unqids(4:6,7:9),cw);
-        
-    case 'd1cw'
-        r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),ccw);
-    case 'd2cw'
-        r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),ccw);
-        r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),cw);
-    case 'd3cw'
-        r.unqids(1:9,1:9) = rot90(r.unqids(1:9,1:9),ccw);
-        r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),cw);
-        r.unqids(4:6,10:12) = fliplr(rot90(fliplr(r.unqids(4:6,10:12)),ccw));
-        
-    case 'd1ccw'
-        r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),cw);
-    case 'd2ccw'
-        r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),cw);
-        r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),ccw);
-    case 'd3ccw'
-        r.unqids(1:9,1:9) = rot90(r.unqids(1:9,1:9),cw);
-        r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),ccw);
-        r.unqids(4:6,10:12) = fliplr(rot90(fliplr(r.unqids(4:6,10:12)),cw));
-        
+
+mt = regexp(move,'([h,v,d])(\d+)(c{1,2}w)','tokens');
+hvd = mt{1}{1};
+idx = str2double(mt{1}{2});
+rtn = mt{1}{3};
+if isnan(idx) || idx<1 || idx> r.rubix_size
+    warndlg('invalid move selected','invalid move','ok');
+    return
+end
+switch sprintf('%s-%s',hvd,rtn)
+    case 'h-cw'
+        r.unqids(r.rubix_size+idx,:) =...
+            r.unqids(r.rubix_size+idx,[r.rubix_size*3+1:r.rubix_size*4,1:r.rubix_size*3]);
+        % r.unqids(4,:) = r.unqids(4,[10:12,1:9]);
+        if idx == 1
+            r.unqids(1:r.rubix_size,r.rubix_size+1:r.rubix_size*2) =...
+                rot90(r.unqids(1:r.rubix_size,r.rubix_size+1:r.rubix_size*2),ccw);
+            % r.unqids(1:3,4:6) = rot90(r.unqids(1:3,4:6),ccw);
+        elseif idx == r.rubix_size
+            r.unqids(r.rubix_size*2+1:r.rubix_size*3,r.rubix_size+1:r.rubix_size*2) =...
+                rot90(r.unqids(r.rubix_size*2+1:r.rubix_size*3,r.rubix_size+1:r.rubix_size*2),cw);
+            % r.unqids(7:9,4:6) = rot90(r.unqids(7:9,4:6),cw);
+        end
+    case 'h-ccw'
+        r.unqids(r.rubix_size+idx,:) =...
+            r.unqids(r.rubix_size+idx,[r.rubix_size+1:r.rubix_size*4,1:r.rubix_size]);
+        % r.unqids(4,:) = r.unqids(4,[4:12,1:3]);
+        if idx == 1
+            r.unqids(1:r.rubix_size,r.rubix_size+1:r.rubix_size*2) =...
+                rot90(r.unqids(1:r.rubix_size,r.rubix_size+1:r.rubix_size*2),cw);
+            % r.unqids(1:3,4:6) = rot90(r.unqids(1:3,4:6),cw);
+        elseif idx == r.rubix_size
+            r.unqids(r.rubix_size*2+1:r.rubix_size*3,r.rubix_size+1:r.rubix_size*2) =...
+                rot90(r.unqids(r.rubix_size*2+1:r.rubix_size*3,r.rubix_size+1:r.rubix_size*2),ccw);
+            % r.unqids(7:9,4:6) = rot90(r.unqids(7:9,4:6),ccw);
+        end
+    case 'v-cw'
+        col = [flipud(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*4-idx+1));r.unqids(:,r.rubix_size+idx)];
+        col = [col(r.rubix_size*3+1:r.rubix_size*4);col(1:r.rubix_size*3)];
+        r.unqids(:,r.rubix_size+idx) = col(r.rubix_size+1:r.rubix_size*4);
+        r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*4-idx+1) = flipud(col(1:r.rubix_size));
+        % col = [flipud(r.unqids(4:6,12));r.unqids(:,4)];
+        % col = [col(10:12);col(1:9)];
+        % r.unqids(:,4) = col(4:12);
+        % r.unqids(4:6,12) = flipud(col(1:3));
+        if idx == 1
+            r.unqids(r.rubix_size+1:r.rubix_size*2,1:r.rubix_size) =...
+                rot90(r.unqids(r.rubix_size+1:r.rubix_size*2,1:r.rubix_size),cw);
+            % r.unqids(4:6,1:3) = rot90(r.unqids(4:6,1:3),cw);
+        elseif idx == r.rubix_size
+            r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*2+1:r.rubix_size*3) =...
+                rot90(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*2+1:r.rubix_size*3),ccw);
+            % r.unqids(4:6,7:9) = rot90(r.unqids(4:6,7:9),ccw);
+        end
+    case 'v-ccw'
+        col = [flipud(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*4-idx+1));r.unqids(:,r.rubix_size+idx)];
+        col = [col(r.rubix_size+1:r.rubix_size*4);col(1:r.rubix_size)];
+        r.unqids(:,r.rubix_size+idx) = col(r.rubix_size+1:r.rubix_size*4);
+        r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*4-idx+1) = flipud(col(1:r.rubix_size));
+        % col = [flipud(r.unqids(4:6,12));r.unqids(:,4)];
+        % col = [col(4:12);col(1:3)];
+        % r.unqids(:,4) = col(4:12);
+        % r.unqids(4:6,12) = flipud(col(1:3));
+        if idx == 1
+            r.unqids(r.rubix_size+1:r.rubix_size*2,1:r.rubix_size) =...
+                rot90(r.unqids(r.rubix_size+1:r.rubix_size*2,1:r.rubix_size),ccw);
+            % r.unqids(4:6,1:3) = rot90(r.unqids(4:6,1:3),ccw);
+        elseif idx == r.rubix_size
+            r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*2+1:r.rubix_size*3) =...
+                rot90(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*2+1:r.rubix_size*3),cw);
+            % r.unqids(4:6,7:9) = rot90(r.unqids(4:6,7:9),cw);
+        end
+    case 'd-cw'
+        if idx == 1
+            r.unqids(r.rubix_size:r.rubix_size*2+1,r.rubix_size:r.rubix_size*2+1) =...
+                rot90(r.unqids(r.rubix_size:r.rubix_size*2+1,r.rubix_size:r.rubix_size*2+1),ccw);
+            % r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),ccw);
+        elseif idx == r.rubix_size
+            r.unqids(1:r.rubix_size*3,1:r.rubix_size*3) =...
+                rot90(r.unqids(1:r.rubix_size*3,1:r.rubix_size*3),ccw);
+            r.unqids(2:r.rubix_size*3-1,2:r.rubix_size*3-1) =...
+                rot90(r.unqids(2:r.rubix_size*3-1,2:r.rubix_size*3-1),cw);
+            r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*3+1:r.rubix_size*4) =...
+                fliplr(rot90(fliplr(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*3+1:r.rubix_size*4)),ccw));
+            % r.unqids(1:9,1:9) = rot90(r.unqids(1:9,1:9),ccw);
+            % r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),cw);
+            % r.unqids(4:6,10:12) = fliplr(rot90(fliplr(r.unqids(4:6,10:12)),ccw));
+        else
+            r.unqids(r.rubix_size-idx+1:r.rubix_size*2+idx,r.rubix_size-idx+1:r.rubix_size*2+idx) =...
+                rot90(r.unqids(r.rubix_size-idx+1:r.rubix_size*2+idx,r.rubix_size-idx+1:r.rubix_size*2+idx),ccw);
+            r.unqids(r.rubix_size-idx+2:r.rubix_size*2+idx-1,r.rubix_size-idx+2:r.rubix_size*2+idx-1) =...
+                rot90(r.unqids(r.rubix_size-idx+2:r.rubix_size*2+idx-1,r.rubix_size-idx+2:r.rubix_size*2+idx-1),cw);
+            % r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),ccw);
+            % r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),cw);
+        end
+    case 'd-ccw'
+        if idx == 1
+            r.unqids(r.rubix_size:r.rubix_size*2+1,r.rubix_size:r.rubix_size*2+1) =...
+                rot90(r.unqids(r.rubix_size:r.rubix_size*2+1,r.rubix_size:r.rubix_size*2+1),cw);
+            % r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),cw);
+        elseif idx == r.rubix_size
+            r.unqids(1:r.rubix_size*3,1:r.rubix_size*3) =...
+                rot90(r.unqids(1:r.rubix_size*3,1:r.rubix_size*3),cw);
+            r.unqids(2:r.rubix_size*3-1,2:r.rubix_size*3-1) =...
+                rot90(r.unqids(2:r.rubix_size*3-1,2:r.rubix_size*3-1),ccw);
+            r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*3+1:r.rubix_size*4) =...
+                fliplr(rot90(fliplr(r.unqids(r.rubix_size+1:r.rubix_size*2,r.rubix_size*3+1:r.rubix_size*4)),cw));
+            % r.unqids(1:9,1:9) = rot90(r.unqids(1:9,1:9),cw);
+            % r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),ccw);
+            % r.unqids(4:6,10:12) = fliplr(rot90(fliplr(r.unqids(4:6,10:12)),cw));
+        else
+            r.unqids(r.rubix_size-idx+1:r.rubix_size*2+idx,r.rubix_size-idx+1:r.rubix_size*2+idx) =...
+                rot90(r.unqids(r.rubix_size-idx+1:r.rubix_size*2+idx,r.rubix_size-idx+1:r.rubix_size*2+idx),cw);
+            r.unqids(r.rubix_size-idx+2:r.rubix_size*2+idx-1,r.rubix_size-idx+2:r.rubix_size*2+idx-1) =...
+                rot90(r.unqids(r.rubix_size-idx+2:r.rubix_size*2+idx-1,r.rubix_size-idx+2:r.rubix_size*2+idx-1),ccw);
+            % r.unqids(2:8,2:8) = rot90(r.unqids(2:8,2:8),cw);
+            % r.unqids(3:7,3:7) = rot90(r.unqids(3:7,3:7),ccw);
+        end
     otherwise
-        warndlg('invalid move selected','invalid move','ok')
+        warndlg('invalid move selected','invalid move','ok');
+        return
 end
 end
 
