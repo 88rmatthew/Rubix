@@ -1,9 +1,20 @@
 function analyze_rubix_period
 
+%% specify rubik's size
+rubix_size = 3;
+
+%% compute possible moves
+
+combs = transpose(combvec(1:3,1:rubix_size,1:2));
+hvd = {'h','v','d'};
+idx = strtrim(transpose(cellstr(num2str(transpose(1:rubix_size)))));
+rtn = {'cw','ccw'};
+possible_moves = join([hvd(combs(:,1));idx(combs(:,2));rtn(combs(:,3))]','');
+
 %% get all combinations that will be run
-possible_moves = {'h1cw','h2cw','h3cw','h1ccw','h2ccw','h3ccw','v1cw','v2cw','v3cw','v1ccw','v2ccw','v3ccw','d1cw','d2cw','d3cw','d1ccw','d2ccw','d3ccw'};
+
 pm = 1:numel(possible_moves);
-numchoose = 3;
+numchoose = 2;
 b = nchoosek(pm,numchoose);
 p = perms(1:numchoose);
 B = cell(1,size(p,1));
@@ -22,16 +33,16 @@ h = waitbar(0,'analyzing');
 numB = size(B,1);
 err = cell(1,numB);
 for ib = 1:numB
-    moves = repmat(B(ib,:),1,1000);
-    err{ib} = rubix(moves);
+    moves = repmat(B(ib,:),1,5000);
+    err{ib} = rubix(rubix_size,moves,false);
     waitbar(ib/numB,h)
 end
 delete(h)
+
 %% plot err
 figure
 histogram(cellfun(@numel,err),150)
 title('histogram of 3 sequence periods')
 xlabel('number of moves')
-
 
 end

@@ -1,4 +1,4 @@
-function err = rubix(moves)
+function err = rubix(rubix_size,moves,disp_en)
 % The rubix function houses the construction, visualization, and movement
 % algorithms for an n-sized rubik's cube.
 %
@@ -79,8 +79,6 @@ colors = {...
 
 %% construct rubik's cube
 
-rubix_size = 10; % size of 3 corresponds to 3x3x3 rubix, for now limit to 9x9x9
-
 if ~isnumeric(rubix_size) || mod(rubix_size,1) ~= 0 || rubix_size < 2
     return
 end
@@ -128,52 +126,30 @@ r.z = [...
     nansblock,          flipud(vincblock),  nansblock,          nansblock;...
     ];
 
-%% rotate one of the faces
+%% make the moves and assess the error
 
-% figure('Position',[620,200,510,520],'Color','w')
-% set(gca,'XTickLabels',[],'YTickLabels',[],'ZTickLabels',[],'XColor','none','YColor','none','ZColor','none',...
-%     'NextPlot','replacechildren')
-% possible_moves = {'h1cw','h2cw','h3cw','h1ccw','h2ccw','h3ccw','v1cw','v2cw','v3cw','v1ccw','v2ccw','v3ccw','d1cw','d2cw','d3cw','d1ccw','d2ccw','d3ccw'};
-% moves = possible_moves(randsample(numel(possible_moves),1000,true));
-% moves = repmat({'v3ccw','h1cw','d2ccw'},1,500);
-% moves = {'h1cw','d3ccw'};
-% figure('Position',[10,250,1400,330])
-% err = NaN(1,numel(moves));
-% err_0cnt = 0;
-% for imo = 1:numel(moves)
-%     r = make_a_move(r,moves{imo});
-% %     subplot(1,5,imo)
-% %     display_rubix(gca,r)
-% %     title(moves{imo})
-%     err(imo) = assess_error(r);
-%     if err(imo) == 0
-%         err_0cnt = err_0cnt + 1;
-%         if err_0cnt == 2
-%             break
-%         end
-%     end
-% end
-%
-% err(1:find(err==0,1,'first')-1) = [];
+err = NaN(1,numel(moves));
+for imo = 1:numel(moves)
+    r = make_a_move(r,moves{imo});
+    err(imo) = assess_error(r);
+end
 
-% figure;
-% plot(err,'-o')
-% axis tight
-r = make_a_move(r,'v3ccw');
-r = make_a_move(r,'h7cw');
-r = make_a_move(r,'d7cw');
 %% display the rubix
 
-figure('Position',[620,200,510,520],'Color','w')
-set(gca,'XTickLabels',[],'YTickLabels',[],'ZTickLabels',[],'XColor','none','YColor','none','ZColor','none')
-display_rubix(gca,r)
-
-disp(r.unqids)
+if disp_en
+    figure('Position',[10,50,1375,520],'Color','w')
+    subplot(1,2,1)
+    set(gca,'XTickLabels',[],'YTickLabels',[],'ZTickLabels',[],'XColor','none','YColor','none','ZColor','none')
+    display_rubix_3d(gca,r)
+    subplot(1,2,2)
+    set(gca,'XTickLabels',[],'YTickLabels',[],'ZTickLabels',[],'XColor','none','YColor','none','ZColor','none')
+    display_rubix_2d(gca,r)
+end
 
 end
 
-%% subfunction display_rubix
-function display_rubix(theax,r)
+%% subfunction display_rubix_3d
+function display_rubix_3d(theax,r)
 
 global colors
 
@@ -215,9 +191,38 @@ for ir = 1:length(ri)
     end
 end
 
-axis([-1,r.rubix_size+1,-1,r.rubix_size+1,-1,r.rubix_size+1])
+axis(repmat([-2,r.rubix_size+2],1,3))
 axis vis3d
 view(145,25)
+drawnow
+
+end
+
+%% subfunction display_rubix_2d
+function display_rubix_2d(theax,r)
+
+global colors
+
+ri = r.unqids;
+
+axes(theax)
+hold(theax,'on')
+
+for ir = 1:size(ri,1)
+    for ic = 1:size(ri,2)
+        if isnan(ri{ir,ic})
+            continue
+        end
+        c = colors{strcmp(ri{ir,ic}(1),colors(:,1)),2};
+        x = ic-1;
+        y = size(ri,1)-ir;
+        xf = x + [0,1,1,0];
+        yf = y + [0,0,1,1];
+        patch(xf,yf,c,'LineWidth',2)
+    end
+end
+
+axis([-1,r.rubix_size*4+1,-1,r.rubix_size*3+1])
 drawnow
 
 end
