@@ -1,7 +1,7 @@
 function analyze_rubix_period
 
 %% specify rubik's size
-rubix_size = 3;
+rubix_size = 7;
 
 %% compute possible moves
 
@@ -35,14 +35,32 @@ err = cell(1,numB);
 for ib = 1:numB
     moves = repmat(B(ib,:),1,5000);
     err{ib} = rubix(rubix_size,moves,false);
+    err{ib}(isnan(err{ib})) = [];
     waitbar(ib/numB,h)
 end
 delete(h)
 
 %% plot err
-figure
-histogram(cellfun(@numel,err),150)
+plengths = cellfun(@numel,err);
+
+figure('Position',[50,50,1300,330])
+subplot(1,2,1)
+histogram(plengths,150)
 title('histogram of 3 sequence periods')
 xlabel('number of moves')
+grid on
+
+subplot(1,2,2)
+hold on
+for ib = 1:numB
+    c = (length(err{ib})-min(plengths))/range(plengths);
+    plot3(1:length(err{ib}),ib*ones(1,length(err{ib})),err{ib},'-','Color',[0,c,1-c])
+end
+xlabel('move #')
+ylabel('simulation #')
+zlabel('sum of error')
+grid on
+axis tight
+view(5,10)
 
 end

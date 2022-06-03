@@ -93,7 +93,7 @@ for c = 1:6 % always a six sided rubix
     block.(sprintf('d_%s',color)) = cell(rubix_size);
     for i = 1:rubix_size
         for j = 1:rubix_size
-            block.(sprintf('d_%s',color)){i,j} = sprintf('%s%i%i',color,i,j);
+            block.(sprintf('d_%s',color)){i,j} = sprintf('%s%02.0f%02.0f',color,i,j);
         end
     end
 end
@@ -132,6 +132,9 @@ err = NaN(1,numel(moves));
 for imo = 1:numel(moves)
     r = make_a_move(r,moves{imo});
     err(imo) = assess_error(r);
+    if err(imo) == 0
+        break
+    end
 end
 
 %% display the rubix
