@@ -1,7 +1,55 @@
+%% main function analyze_rubix_period
 function analyze_rubix_period
 
 %% specify rubik's size
-rubix_size = 7;
+% rubix_size = [2,3,4,5,6,7];
+
+%% specify number of moves in a sequence
+% numchoose = [2,3];
+
+%% get all combinations to be run
+% cases = transpose(combvec(rubix_size,numchoose));
+cases = [...
+    2,  4;...
+    4,  2;...
+    6,  3;...
+    ];
+numc = size(cases,1);
+
+%% initialize results table
+r = cell(numc,1);
+
+for ic = 1:numc
+    
+    %% run the analysis
+    [move_sequence,error] = analysis(cases(ic,1),cases(ic,2));
+    
+    %% store the results
+    
+    d = [...
+        repmat({cases(ic,1)},length(error),1),...
+        join(move_sequence,', '),...
+        reshape(error,[],1),...
+        ];
+    
+    r{ic} = cell2table(d,'VariableNames',{'Rubix Size','Move Sequence','Error'});
+    
+    save('r.mat','r')
+end
+
+%% concatenate all results
+new_results = vertcat(r{:});
+load('results.mat','results');
+results = [results;new_results];
+
+%% save results
+save('results.mat','results')
+
+end
+
+%% subfunction analysis
+function [B,err] = analysis(rubix_size,numchoose)
+
 
 %% compute possible moves
 
@@ -14,7 +62,7 @@ possible_moves = join([hvd(combs(:,1));idx(combs(:,2));rtn(combs(:,3))]','');
 %% get all combinations that will be run
 
 pm = 1:numel(possible_moves);
-numchoose = 2;
+
 b = nchoosek(pm,numchoose);
 p = perms(1:numchoose);
 B = cell(1,size(p,1));
